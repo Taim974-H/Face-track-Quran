@@ -4,30 +4,36 @@ import axios from 'axios';
 
 export default function QuranPlayer() {
   const [faceDirection, setFaceDirection] = useState('center');
+  const [preferredDirection, setPreferredDirection] = useState('center');
   const [verse, setVerse] = useState(null);
   const [audio, setAudio] = useState(null);
-  const [translation, setTranslation] = useState(null); // Added translation state
+  const [translation, setTranslation] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [lastPlayedVerse, setLastPlayedVerse] = useState(null); // Store the last played verse
-  const [isContinuing, setIsContinuing] = useState(false); // Track if Surah is being continued
+  const [lastPlayedVerse, setLastPlayedVerse] = useState(null);
+  const [isContinuing, setIsContinuing] = useState(false);
   const videoRef = useRef(null);
   const detectionIntervalRef = useRef(null);
   const isProcessing = useRef(false);
+  const preferredDirectionRef = useRef(preferredDirection);
+
+  // Sync ref with state
+  useEffect(() => {
+    preferredDirectionRef.current = preferredDirection;
+  }, [preferredDirection]);
 
   const loadModels = async () => {
     await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
     await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    console.log('Models loaded');
   };
 
   const fetchRandomVerse = async () => {
-    if (isProcessing.current || audio) return; // Prevent multiple triggers
+    if (isProcessing.current || audio) return;
     
     isProcessing.current = true;
     try {
       const surah = Math.floor(Math.random() * 114) + 1;
       const response = await axios.get(
-        `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,ar.alafasy,en.sahih` // Added en.sahih for translation
+        `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,ar.alafasy,en.sahih`
       );
       const verses = response.data.data[0].ayahs;
       const randomVerse = verses[Math.floor(Math.random() * verses.length)];
@@ -39,12 +45,11 @@ export default function QuranPlayer() {
         verseNumber: randomVerse.numberInSurah
       };
 
-      // Fetch translation from en.sahih edition
       const translationText = response.data.data[2].ayahs[randomVerse.numberInSurah - 1].text;
 
       setVerse(newVerse);
-      setLastPlayedVerse(newVerse); // Store the last played verse
-      setTranslation(translationText); // Set translation
+      setLastPlayedVerse(newVerse);
+      setTranslation(translationText);
     } finally {
       isProcessing.current = false;
     }
@@ -139,14 +144,14 @@ export default function QuranPlayer() {
   };
 
   const handleVideoOnPlay = () => {
-    stopDetection(); // Clear any existing interval
+    stopDetection();
     
     detectionIntervalRef.current = setInterval(async () => {
-      if (!videoRef.current || audio) return; // Stop if audio is playing
+      if (!videoRef.current || audio) return;
 
       const detection = await faceapi.detectSingleFace(
         videoRef.current, 
-        new faceapi.TinyFaceDetectorOptions()
+        new faceapi.TinyFaceDetectorOptions({ inputSize: 128 }) // Faster processing
       ).withFaceLandmarks();
       
       if (!detection) return;
@@ -156,12 +161,16 @@ export default function QuranPlayer() {
       const midpoint = videoRef.current.videoWidth / 2;
 
       let newDirection = 'center';
-      if (noseTip < midpoint - 50) newDirection = 'right';
-      else if (noseTip > midpoint + 50) newDirection = 'left';
+      if (noseTip < midpoint - 40) newDirection = 'right';
+      else if (noseTip > midpoint + 40) newDirection = 'left';
 
       setFaceDirection(newDirection);
-      if (newDirection !== 'center') fetchRandomVerse();
-    }, 1000);
+      
+      // Check against current preferred direction using ref
+      if (newDirection === preferredDirectionRef.current) {
+        fetchRandomVerse();
+      }
+    }, 500); // Faster check interval
   };
 
   const togglePause = () => {
@@ -210,8 +219,32 @@ export default function QuranPlayer() {
     }
   }, [verse]);
 
+  // Add direction selection buttons
+  const DirectionButton = ({ direction }) => (
+    <button
+      onClick={() => setPreferredDirection(direction)}
+      className={`px-4 py-2 rounded-lg ${
+        preferredDirection === direction 
+          ? 'bg-blue-600 text-white' 
+          : 'bg-gray-200 hover:bg-gray-300'
+      }`}
+    >
+      {direction.charAt(0).toUpperCase() + direction.slice(1)}
+    </button>
+  );
+
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center">
+      <div className="mb-4 flex gap-4">
+        <DirectionButton direction="left" />
+        <DirectionButton direction="center" />
+        <DirectionButton direction="right" />
+      </div>
+      
+      <div className="mb-4 text-lg">
+        Detected Direction: <span className="font-bold">{faceDirection}</span> | 
+        Preferred Direction: <span className="font-bold text-blue-600">{preferredDirection}</span>
+      </div>
       <video
         ref={videoRef}
         autoPlay
