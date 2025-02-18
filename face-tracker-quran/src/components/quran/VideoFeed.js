@@ -7,5 +7,6 @@ export const VideoFeed = ({ videoRef, onPlay }) => (
     playsInline
     onPlay={onPlay}
     className="w-full max-w-md object-cover border border-gray-300 rounded-lg shadow-md"
+    style={{ transform: 'scaleX(-1)' }}
   />
 );
