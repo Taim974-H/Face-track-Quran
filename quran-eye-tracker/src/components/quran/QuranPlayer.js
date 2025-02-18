@@ -26,10 +26,8 @@ export default function QuranPlayer() {
   // Monitor the isContinuing flag to stop/start the video stream.
   useEffect(() => {
     if (quranPlayer.isContinuing) {
-      // Stop the video stream when Continue Surah is selected.
       stopVideoStream();
     } else {
-      // Restart the video if no stream is available.
       if (!videoRef.current?.srcObject) {
         startVideo();
       }
@@ -38,7 +36,7 @@ export default function QuranPlayer() {
 
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center">
-      {/* Hide direction selection when a verse is playing */}
+      {/* Show DirectionSelector only if no verse is being played */}
       {!quranPlayer.audio && (
         <DirectionSelector
           preferredDirection={preferredDirection}
@@ -53,16 +51,18 @@ export default function QuranPlayer() {
           <span className="font-bold">Choose your direction</span>
         ) : (
           <>
-            Detected Direction:{' '}
-            <span className="font-bold">{faceDirection}</span> | Preferred Direction:{' '}
+            Detected Direction: <span className="font-bold">{faceDirection}</span> | Preferred Direction:{' '}
             <span className="font-bold text-blue-600">{preferredDirection}</span>
           </>
         )}
       </div>
 
-      {/* Only show video stream if not in Continue Surah mode */}
-      {!quranPlayer.isContinuing && (
-        <VideoFeed videoRef={videoRef} onPlay={handleVideoOnPlay} />
+      {/* Only attach the onPlay handler and the whole videoFeed component when a direction is chosen */}
+      {hasChosenDirection && (
+        <VideoFeed
+        videoRef={videoRef}
+        onPlay={hasChosenDirection ? handleVideoOnPlay : undefined}
+      />
       )}
 
       {quranPlayer.verse && (
