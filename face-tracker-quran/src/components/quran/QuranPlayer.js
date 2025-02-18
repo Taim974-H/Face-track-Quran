@@ -9,8 +9,10 @@ import { VideoFeed } from "./VideoFeed";
 import { VerseDisplay } from "./VerseDisplay";
 import { PlayerControls } from "./PlayerControls";
 import axios from "axios";
+import WelcomeModal from "../WelcomeModal";
 
 export default function QuranPlayer() {
+  const [showWelcome, setShowWelcome] = useState(true);
   const {
     preferredDirection,
     setPreferredDirection,
@@ -66,70 +68,78 @@ export default function QuranPlayer() {
     }
   }, [quranPlayer.isContinuing, stopVideoStream, startVideo, videoRef]);
 
-  return (
-    <div className="relative w-full h-screen flex flex-col items-center justify-center">
-      {/* Render direction selection only when verse is not playing */}
-      {!quranPlayer.audio && (
-        <>
-          {/* Show "Choose your direction" above the selectors if no direction is chosen */}
-          {!hasChosenDirection && (
-            <div className="mb-4 text-lg">
-              <span className="font-bold">Choose your direction</span>
-            </div>
-          )}
-          <DirectionSelector
-            preferredDirection={preferredDirection}
-            setPreferredDirection={setPreferredDirection}
-          />
-          <ReciterSelector
-            recitersList={recitersList}
-            reciter={reciter}
-            setReciter={setReciter}
-          />
-        </>
-      )}
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+  };
 
-      <div className="mb-4 text-lg">
-        {quranPlayer.audio ? (
-          quranPlayer.isContinuing ? (
-            <span className="font-bold">Surah is being recited</span>
-          ) : (
-            <span className="font-bold">Verse is being recited</span>
-          )
-        ) :hasChosenDirection && (
+  return (
+      <div className="relative w-full h-screen flex flex-col items-center justify-center">
+        {/* {showWelcome && <WelcomeModal onClose={handleCloseWelcome} />} */}
+        
+        {/* Render direction selection only when verse is not playing */}
+        {!quranPlayer.audio && (
           <>
-            Detected Direction:{" "}
-            <span className="font-bold">{faceDirection}</span> | Preferred
-            Direction:{" "}
-            <span className="font-bold text-blue-600">
-              {preferredDirection}
-            </span>
+            {/* Show "Choose your direction" above the selectors if no direction is chosen */}
+            {!hasChosenDirection && (
+              <div className="mb-4 text-lg">
+                <span className="font-bold">Choose your direction</span>
+              </div>
+            )}
+            <DirectionSelector
+              preferredDirection={preferredDirection}
+              setPreferredDirection={setPreferredDirection}
+            />
+            <ReciterSelector
+              recitersList={recitersList}
+              reciter={reciter}
+              setReciter={setReciter}
+            />
           </>
         )}
+
+        <div className="mb-4 text-lg">
+          {quranPlayer.audio ? (
+            quranPlayer.isContinuing ? (
+              <span className="font-bold">Surah is being recited</span>
+            ) : (
+              <span className="font-bold">Verse is being recited</span>
+            )
+          ) : (
+            hasChosenDirection && (
+              <>
+                Detected Direction:{" "}
+                <span className="font-bold">{faceDirection}</span> | Preferred
+                Direction:{" "}
+                <span className="font-bold text-blue-600">
+                  {preferredDirection}
+                </span>
+              </>
+            )
+          )}
+        </div>
+
+        {hasChosenDirection && !quranPlayer.isContinuing && (
+          <VideoFeed videoRef={videoRef} onPlay={handleVideoOnPlay} />
+        )}
+
+        {quranPlayer.verse && (
+          <VerseDisplay
+            verse={quranPlayer.verse}
+            translation={quranPlayer.translation}
+          />
+        )}
+
+        {hasChosenDirection && quranPlayer.lastPlayedVerse && (
+          <PlayerControls
+            audio={quranPlayer.audio}
+            isPaused={quranPlayer.isPaused}
+            isContinuing={quranPlayer.isContinuing}
+            onTogglePause={quranPlayer.togglePause}
+            onStopContinuing={quranPlayer.stopContinuingSurah}
+            onReplayLastVerse={quranPlayer.replayLastVerse}
+            onStartContinuing={quranPlayer.startContinuingSurah}
+          />
+        )}
       </div>
-
-      {hasChosenDirection && !quranPlayer.isContinuing && (
-        <VideoFeed videoRef={videoRef} onPlay={handleVideoOnPlay} />
-      )}
-
-      {quranPlayer.verse && (
-        <VerseDisplay
-          verse={quranPlayer.verse}
-          translation={quranPlayer.translation}
-        />
-      )}
-
-      {hasChosenDirection && quranPlayer.lastPlayedVerse && (
-        <PlayerControls
-          audio={quranPlayer.audio}
-          isPaused={quranPlayer.isPaused}
-          isContinuing={quranPlayer.isContinuing}
-          onTogglePause={quranPlayer.togglePause}
-          onStopContinuing={quranPlayer.stopContinuingSurah}
-          onReplayLastVerse={quranPlayer.replayLastVerse}
-          onStartContinuing={quranPlayer.startContinuingSurah}
-        />
-      )}
-    </div>
   );
 }
