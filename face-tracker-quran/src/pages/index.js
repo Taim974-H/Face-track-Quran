@@ -1,5 +1,5 @@
 // pages/index.js
-import QuranPlayer from '../../src/components/quran/QuranPlayer';
+import QuranPlayer from '../components/quran/QuranPlayer';
 
 export default function Home() {
   return (

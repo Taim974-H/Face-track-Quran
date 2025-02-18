@@ -8,7 +8,7 @@ export const PlayerControls = ({
   onReplayLastVerse,
   onStartContinuing
 }) => (
-  <div className="flex space-x-4 mt-4">
+  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-4">
     {audio ? (
       <>
         <button

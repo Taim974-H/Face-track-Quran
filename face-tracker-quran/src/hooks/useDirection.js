@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 export const useDirection = () => {
-  const [preferredDirection, setPreferredDirectionInternal] = useState('center');
+  const [preferredDirection, setPreferredDirectionInternal] = useState('');
   const [hasChosenDirection, setHasChosenDirection] = useState(false);
   const preferredDirectionRef = useRef(preferredDirection);
 
