@@ -50,7 +50,7 @@ export default function Welcome() {
                 Looking Right
               </h3>
               <p className="text-lg text-gray-700 dark:text-gray-300">
-                This indicates your face is turned so that your nose points toward the right side of the screen. In other words, the right side of your face is more visible.
+                This indicates your face is turned so that your nose points toward the right side of the screen. In other words, the left side of your face is more visible.
               </p>
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function Welcome() {
                 Looking Left
               </h3>
               <p className="text-lg text-gray-700 dark:text-gray-300">
-                This indicates your face is turned so that your nose points toward the left side of the screen. In other words, the left side of your face is more visible.
+                This indicates your face is turned so that your nose points toward the left side of the screen. In other words, the right side of your face is more visible.
               </p>
             </div>
           </div>
