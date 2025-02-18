@@ -1,21 +1,10 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-import FaceTracker from '@/components/FaceTracker';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// pages/index.js
+import QuranPlayer from '../../src/components/quran/QuranPlayer';
 
 export default function Home() {
   return (
-    <main className="min-h-screen p-8">
-      <FaceTracker />
-    </main>
+    <div className="container mx-auto p-4">
+      <QuranPlayer />
+    </div>
   );
 }
