@@ -9,13 +9,13 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1f2937; /* dark mode background (e.g. gray-800) */
+    --foreground: #f9fafb; /* dark mode text (e.g. gray-50) */
   }
 }
 
