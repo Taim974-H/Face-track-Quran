@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
-export const useQuranPlayer = () => {
+export const useQuranPlayer = (reciter) => {
   const [verse, setVerse] = useState(null);
   const [audio, setAudio] = useState(null);
   const [translation, setTranslation] = useState(null);
@@ -12,25 +12,29 @@ export const useQuranPlayer = () => {
   const isProcessing = useRef(false);
   const audioRef = useRef(null);
 
-  // New ref to hold the current value of isContinuing
-  const isContinuingRef = useRef(isContinuing);
+  // Create a ref for the reciter value.
+  const reciterRef = useRef(reciter);
   useEffect(() => {
-    isContinuingRef.current = isContinuing;
-  }, [isContinuing]);
+    reciterRef.current = reciter;
+  }, [reciter]);
 
-  // Keep audioRef in sync with audio state
+  // Keep audioRef in sync with audio state.
   useEffect(() => {
     audioRef.current = audio;
   }, [audio]);
 
   // Fetch a random verse from the Quran
   const fetchRandomVerse = async () => {
+    if (!reciterRef.current) {
+      console.error("No reciter selected. Cannot fetch verse.");
+      return;
+    }
     if (isProcessing.current || audioRef.current) return;
     isProcessing.current = true;
     try {
       const surah = Math.floor(Math.random() * 114) + 1;
       const response = await axios.get(
-        `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,ar.alafasy,en.sahih`
+        `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,${reciterRef.current},en.sahih`
       );
       const verses = response.data.data[0].ayahs;
       const randomVerse = verses[Math.floor(Math.random() * verses.length)];
@@ -61,8 +65,9 @@ export const useQuranPlayer = () => {
     try {
       const surah = lastPlayedVerse.surahNumber;
       const nextVerseNumber = lastPlayedVerse.verseNumber + 1;
+      console.log(reciterRef.current)
       const response = await axios.get(
-        `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,ar.alafasy,en.sahih`
+        `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,${reciterRef.current},en.sahih`
       );
       const verses = response.data.data[0].ayahs;
       if (nextVerseNumber > verses.length) {
@@ -98,13 +103,12 @@ export const useQuranPlayer = () => {
   // Start continuing the current Surah
   const startContinuingSurah = () => {
     setIsContinuing(true);
-    // If no verse is playing, fetch the next verse immediately.
     if (!verse && lastPlayedVerse) {
       fetchNextVerse();
     }
   };
 
-  // Stop continuing the Surah and reset state
+  // Stop continuing the Surah and reset state (after current verse finishes)
   const stopContinuingSurah = () => {
     setIsContinuing(false);
   };
@@ -120,7 +124,13 @@ export const useQuranPlayer = () => {
     setIsPaused(!isPaused);
   };
 
-  // Handle audio playback whenever verse changes
+  // Ref to always hold the current value of isContinuing.
+  const isContinuingRef = useRef(isContinuing);
+  useEffect(() => {
+    isContinuingRef.current = isContinuing;
+  }, [isContinuing]);
+
+  // Handle audio playback whenever verse changes.
   useEffect(() => {
     if (verse?.audio) {
       const audioElement = new Audio(verse.audio);
@@ -128,7 +138,6 @@ export const useQuranPlayer = () => {
       audioElement.play();
 
       audioElement.onended = () => {
-        // Clear the audio reference so the check in fetchNextVerse isn't blocked
         audioRef.current = null;
         if (isContinuingRef.current) {
           fetchNextVerse();
@@ -159,6 +168,6 @@ export const useQuranPlayer = () => {
     startContinuingSurah,
     stopContinuingSurah,
     togglePause,
-    audioRef, // Exposed for use in the face detection hook
+    audioRef,
   };
 };
