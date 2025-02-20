@@ -21,30 +21,38 @@ const HyperlapseRecorder = ({
   const streamRef = useRef(null);
   const ffmpegRef = useRef(null);
 
+  const toBlobURL = async (url, mimeType) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return URL.createObjectURL(new Blob([await blob.arrayBuffer()], { type: mimeType }));
+  };
+
   // FFmpeg initialization
   useEffect(() => {
     const loadFFmpeg = async () => {
       try {
         const ffmpeg = new FFmpeg();
         ffmpegRef.current = ffmpeg;
-
+  
         ffmpeg.on("log", ({ message }) => console.debug("FFmpeg:", message));
         ffmpeg.on("progress", ({ progress }) =>
           console.log(`Processing: ${(progress * 100).toFixed(1)}%`)
         );
-
+  
+        const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
         await ffmpeg.load({
-          coreURL:
-            "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js"
+          coreURL: `${baseURL}/ffmpeg-core.js`,
+          wasmURL: `${baseURL}/ffmpeg-core.wasm`
         });
-
+        
+  
         setFfmpegReady(true);
       } catch (err) {
         console.error("FFmpeg init failed:", err);
-        setError("Failed to initialize video processor");
+        setError(`Failed to initialize video processor: ${err.message}`);
       }
     };
-
+  
     loadFFmpeg();
   }, []);
 
@@ -116,8 +124,8 @@ const HyperlapseRecorder = ({
       streamRef.current = stream;
       recordedChunksRef.current = [];
 
-      const mimeType = MediaRecorder.isTypeSupported("video/webm; codecs=vp9")
-        ? "video/webm; codecs=vp9"
+      const mimeType = MediaRecorder.isTypeSupported("video/webm; codecs=h264")
+        ? "video/webm; codecs=h264"
         : "video/webm";
 
       const mediaRecorder = new MediaRecorder(stream, {
