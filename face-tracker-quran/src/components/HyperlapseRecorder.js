@@ -124,13 +124,12 @@ const HyperlapseRecorder = ({
       streamRef.current = stream;
       recordedChunksRef.current = [];
 
-      const mimeType = MediaRecorder.isTypeSupported("video/mp4; codecs=h264")
-    ? "video/mp4; codecs=h264"
-    : MediaRecorder.isTypeSupported("video/webm; codecs=vp9")
-    ? "video/webm; codecs=vp9"
-    : MediaRecorder.isTypeSupported("video/webm; codecs=vp8")
-    ? "video/webm; codecs=vp8"
-    : "";
+      const mimeType = 
+    MediaRecorder.isTypeSupported("video/mp4; codecs=h264") ? "video/mp4; codecs=h264" :
+    MediaRecorder.isTypeSupported("video/webm; codecs=vp9") ? "video/webm; codecs=vp9" :
+    MediaRecorder.isTypeSupported("video/webm; codecs=vp8") ? "video/webm; codecs=vp8" :
+    "";
+
 
 
       const mediaRecorder = new MediaRecorder(stream, {
