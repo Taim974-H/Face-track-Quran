@@ -5,7 +5,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
 const HyperlapseRecorder = ({
-  containerClass = "", // Additional classes for the container wrapper
+  containerClass = "",
   startStopButtonClass = "fixed top-4 right-4 z-50 px-4 py-2 rounded text-white transition-all",
   downloadLinkClass = "fixed top-16 right-4 z-50 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700",
   errorClass = "text-red-500 mt-2 fixed bottom-4 right-4 z-50 bg-white p-2 rounded shadow",
@@ -21,15 +21,6 @@ const HyperlapseRecorder = ({
   const streamRef = useRef(null);
   const ffmpegRef = useRef(null);
 
-  const toBlobURL = async (url, mimeType) => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return URL.createObjectURL(
-      new Blob([await blob.arrayBuffer()], { type: mimeType })
-    );
-  };
-
-  // FFmpeg initialization
   useEffect(() => {
     const loadFFmpeg = async () => {
       try {
@@ -64,17 +55,15 @@ const HyperlapseRecorder = ({
     try {
       const ffmpeg = ffmpegRef.current;
 
-      // Write input file
       await ffmpeg.writeFile("input.webm", await fetchFile(blob));
 
-      // Run FFmpeg command to produce a hyperlapse (10x speedup)
       await ffmpeg.exec([
         "-i",
         "input.webm",
         "-filter:v",
-        "setpts=0.1*PTS", // 10x video speedup
+        "setpts=0.1*PTS",
         "-filter:a",
-        "atempo=10", // 10x audio speedup
+        "atempo=10",
         "-c:v",
         "libx264",
         "-preset",
@@ -94,12 +83,10 @@ const HyperlapseRecorder = ({
         "output.mp4",
       ]);
 
-      // Read output
       const data = await ffmpeg.readFile("output.mp4");
       const url = URL.createObjectURL(new Blob([data], { type: "video/mp4" }));
       setDownloadUrl(url);
 
-      // Cleanup
       await ffmpeg.deleteFile("input.webm");
       await ffmpeg.deleteFile("output.mp4");
     } catch (err) {
@@ -112,42 +99,44 @@ const HyperlapseRecorder = ({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-      streamRef.current = stream;
-      recordedChunksRef.current = [];
+      setTimeout(async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
 
-      const mimeType = MediaRecorder.isTypeSupported("video/mp4; codecs=h264")
-        ? "video/mp4; codecs=h264"
-        : MediaRecorder.isTypeSupported("video/webm; codecs=vp9")
-        ? "video/webm; codecs=vp9"
-        : MediaRecorder.isTypeSupported("video/webm; codecs=vp8")
-        ? "video/webm; codecs=vp8"
-        : "";
+        streamRef.current = stream;
+        recordedChunksRef.current = [];
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 2500000,
-      });
+        const mimeType = MediaRecorder.isTypeSupported("video/webm; codecs=vp8")
+          ? "video/webm; codecs=vp8"
+          : "";
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
-      };
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType,
+          videoBitsPerSecond: 2500000,
+        });
 
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
-        await processVideo(blob);
-      };
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+        };
 
-      mediaRecorder.start(100);
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecording(true);
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(recordedChunksRef.current, {
+            type: "video/webm",
+          });
+          await processVideo(blob);
+        };
+
+        mediaRecorder.start(100);
+        mediaRecorderRef.current = mediaRecorder;
+        setIsRecording(true);
+      }, 100);
     } catch (err) {
       console.error("Recording failed:", err);
-      setError("Camera access denied");
+      setError("Camera access denied or not supported on this browser.");
     }
   };
 
@@ -160,11 +149,13 @@ const HyperlapseRecorder = ({
   };
 
   const handleButtonClick = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    requestAnimationFrame(() => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
   };
 
   useEffect(() => {
@@ -180,7 +171,6 @@ const HyperlapseRecorder = ({
 
   return (
     <div className={containerClass}>
-      {/* Start/Stop button in the top-right corner */}
       <button
         onClick={handleButtonClick}
         disabled={!ffmpegReady || processing}
@@ -197,7 +187,6 @@ const HyperlapseRecorder = ({
           : "Start Time-Lapse"}
       </button>
 
-      {/* Download button appears after recording is stopped */}
       {downloadUrl && (
         <a
           href={downloadUrl}
