@@ -1,13 +1,13 @@
 // src/components/quran/VerseDisplay.js
 export const VerseDisplay = ({ verse, translation }) => (
-  <div className="fixed top-10 left-1/2 transform -translate-x-1/2 bg-white p-4 sm:p-6 rounded-lg shadow-xl text-center w-11/12 sm:w-3/4 md:w-1/2">
-    <p className="text-xl sm:text-2xl md:text-3xl font-arabic text-gray-900">
+  <div className="w-full p-4 sm:p-6 rounded-lg shadow-xl text-center bg-white dark:bg-gray-700">
+    <p className="text-xl sm:text-2xl md:text-3xl font-arabic text-gray-900 dark:text-white">
       {verse.text}
     </p>
-    <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700 italic">
+    <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 italic">
       {translation}
     </p>
-    <p className="mt-4 text-sm sm:text-base md:text-lg text-gray-600">
+    <p className="mt-4 text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-200">
       Surah {verse.surahNumber}, Verse {verse.verseNumber}
     </p>
   </div>
