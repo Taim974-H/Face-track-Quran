@@ -104,11 +104,12 @@ const HyperlapseRecorder = ({
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 60, max: 60 }
-        },
+        video: true,
+        //  {
+        //   width: { ideal: 1280 },
+        //   height: { ideal: 720 },
+        //   frameRate: { ideal: 60, max: 60 }
+        // },
         audio: true
       });
 
