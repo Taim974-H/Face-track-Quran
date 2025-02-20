@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
 const HyperlapseRecorder = ({
-  containerClass = "",
+  containerClass = "", // Additional classes for the container wrapper
   startStopButtonClass = "fixed top-4 right-4 z-50 px-4 py-2 rounded text-white transition-all",
   downloadLinkClass = "fixed top-16 right-4 z-50 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700",
-  errorClass = "text-red-500 mt-2 fixed bottom-4 right-4 z-50 bg-white p-2 rounded shadow"
+  errorClass = "text-red-500 mt-2 fixed bottom-4 right-4 z-50 bg-white p-2 rounded shadow",
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -21,6 +21,15 @@ const HyperlapseRecorder = ({
   const streamRef = useRef(null);
   const ffmpegRef = useRef(null);
 
+  const toBlobURL = async (url, mimeType) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return URL.createObjectURL(
+      new Blob([await blob.arrayBuffer()], { type: mimeType })
+    );
+  };
+
+  // FFmpeg initialization
   useEffect(() => {
     const loadFFmpeg = async () => {
       try {
@@ -35,10 +44,10 @@ const HyperlapseRecorder = ({
         const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
         await ffmpeg.load({
           coreURL: `${baseURL}/ffmpeg-core.js`,
-          wasmURL: `${baseURL}/ffmpeg-core.wasm`
+          wasmURL: `${baseURL}/ffmpeg-core.wasm`,
         });
 
-        requestAnimationFrame(() => setFfmpegReady(true));
+        setFfmpegReady(true);
       } catch (err) {
         console.error("FFmpeg init failed:", err);
         setError(`Failed to initialize video processor: ${err.message}`);
@@ -48,46 +57,49 @@ const HyperlapseRecorder = ({
     loadFFmpeg();
   }, []);
 
-  const getSupportedMimeType = () => {
-    if (MediaRecorder.isTypeSupported("video/mp4; codecs=h264")) {
-      return "video/mp4; codecs=h264"; // iOS Safari prefers MP4
-    }
-    if (MediaRecorder.isTypeSupported("video/webm; codecs=vp9")) {
-      return "video/webm; codecs=vp9";
-    }
-    if (MediaRecorder.isTypeSupported("video/webm; codecs=vp8")) {
-      return "video/webm; codecs=vp8";
-    }
-    return "";
-  };
-
   const processVideo = async (blob) => {
     if (!ffmpegReady) return;
 
     setProcessing(true);
     try {
       const ffmpeg = ffmpegRef.current;
+
+      // Write input file
       await ffmpeg.writeFile("input.webm", await fetchFile(blob));
 
+      // Run FFmpeg command to produce a hyperlapse (10x speedup)
       await ffmpeg.exec([
-        "-i", "input.webm",
-        "-filter:v", "setpts=0.1*PTS",
-        "-filter:a", "atempo=10",
-        "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-crf", "28",
-        "-c:a", "aac",
-        "-b:a", "96k",
-        "-movflags", "+faststart",
-        "-r", "30",
-        "-threads", "0",
-        "output.mp4"
+        "-i",
+        "input.webm",
+        "-filter:v",
+        "setpts=0.1*PTS", // 10x video speedup
+        "-filter:a",
+        "atempo=10", // 10x audio speedup
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "28",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "96k",
+        "-movflags",
+        "+faststart",
+        "-r",
+        "30",
+        "-threads",
+        "0",
+        "output.mp4",
       ]);
 
+      // Read output
       const data = await ffmpeg.readFile("output.mp4");
       const url = URL.createObjectURL(new Blob([data], { type: "video/mp4" }));
       setDownloadUrl(url);
 
+      // Cleanup
       await ffmpeg.deleteFile("input.webm");
       await ffmpeg.deleteFile("output.mp4");
     } catch (err) {
@@ -100,28 +112,25 @@ const HyperlapseRecorder = ({
 
   const startRecording = async () => {
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setError("Camera access is not supported in this browser.");
-        return;
-      }
-
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720, frameRate: 60 },
-        audio: true
+        video: true,
+        audio: true,
       });
 
       streamRef.current = stream;
       recordedChunksRef.current = [];
 
-      const mimeType = getSupportedMimeType();
-      if (!mimeType) {
-        setError("No supported video format available");
-        return;
-      }
+      const mimeType = MediaRecorder.isTypeSupported("video/mp4; codecs=h264")
+        ? "video/mp4; codecs=h264"
+        : MediaRecorder.isTypeSupported("video/webm; codecs=vp9")
+        ? "video/webm; codecs=vp9"
+        : MediaRecorder.isTypeSupported("video/webm; codecs=vp8")
+        ? "video/webm; codecs=vp8"
+        : "";
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 2500000
+        videoBitsPerSecond: 2500000,
       });
 
       mediaRecorder.ondataavailable = (e) => {
@@ -138,7 +147,7 @@ const HyperlapseRecorder = ({
       setIsRecording(true);
     } catch (err) {
       console.error("Recording failed:", err);
-      setError("Camera access denied. Ensure permissions are enabled.");
+      setError("Camera access denied");
     }
   };
 
@@ -150,11 +159,11 @@ const HyperlapseRecorder = ({
     setIsRecording(false);
   };
 
-  const handleButtonClick = async () => {
+  const handleButtonClick = () => {
     if (isRecording) {
       stopRecording();
     } else {
-      await startRecording(); // Ensure getUserMedia is triggered inside user action
+      startRecording();
     }
   };
 
@@ -171,6 +180,7 @@ const HyperlapseRecorder = ({
 
   return (
     <div className={containerClass}>
+      {/* Start/Stop button in the top-right corner */}
       <button
         onClick={handleButtonClick}
         disabled={!ffmpegReady || processing}
@@ -187,6 +197,7 @@ const HyperlapseRecorder = ({
           : "Start Time-Lapse"}
       </button>
 
+      {/* Download button appears after recording is stopped */}
       {downloadUrl && (
         <a
           href={downloadUrl}
@@ -197,11 +208,7 @@ const HyperlapseRecorder = ({
         </a>
       )}
 
-      {error && (
-        <div className={errorClass}>
-          Error: {error}
-        </div>
-      )}
+      {error && <div className={errorClass}>Error: {error}</div>}
     </div>
   );
 };
