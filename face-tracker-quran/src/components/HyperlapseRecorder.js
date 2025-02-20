@@ -124,21 +124,14 @@ const HyperlapseRecorder = ({
       streamRef.current = stream;
       recordedChunksRef.current = [];
 
-      const getSupportedMimeType = () => {
-        if (MediaRecorder.isTypeSupported("video/webm; codecs=vp9")) {
-          return "video/webm; codecs=vp9";
-        }
-        if (MediaRecorder.isTypeSupported("video/webm; codecs=vp8")) {
-          return "video/webm; codecs=vp8";
-        }
-        if (MediaRecorder.isTypeSupported("video/mp4; codecs=h264")) {
-          return "video/mp4; codecs=h264"; // Only works in Safari
-        }
-        return ""; // Fallback
-      };
-      
+      const mimeType = MediaRecorder.isTypeSupported("video/mp4; codecs=h264")
+    ? "video/mp4; codecs=h264"
+    : MediaRecorder.isTypeSupported("video/webm; codecs=vp9")
+    ? "video/webm; codecs=vp9"
+    : MediaRecorder.isTypeSupported("video/webm; codecs=vp8")
+    ? "video/webm; codecs=vp8"
+    : "";
 
-      const mimeType = getSupportedMimeType();
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
