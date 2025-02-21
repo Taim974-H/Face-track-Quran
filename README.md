@@ -1,6 +1,6 @@
 # Face Track Quran
 
-Face Track Quran is an innovative web application that transforms moments of distraction into opportunities for spiritual enrichment. Built with Next.js, this app uses real-time face detection to randomly select and recite Quranic verses based on the user's gaze direction. Whether you’re at your desk or on the go, this app helps you incorporate Quran recitations into your daily routine seamlessly.
+Face Track Quran is a web app that transforms moments of distraction into opportunities for spiritual enrichment. Built with Next.js, this app uses real-time face detection to randomly select and recite Quranic verses based on the user's face direction. Whether you’re at your desk or on the go, this app helps you incorporate Quran recitations into your daily routine seamlessly.
 
 ## Live Demo
 
