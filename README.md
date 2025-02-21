@@ -51,6 +51,6 @@ Check out the production version here: [https://face-track-quran.vercel.app/](ht
 - **React:** For component-based UI development.
 - **face-api.js:** For real-time face detection.
 - **Axios:** For API calls to fetch Quranic data and reciter editions.
-      - Contribute to the open source project: [https://github.com/islamic-network/alquran.cloud](https://github.com/islamic-network/alquran.cloud)
+    - Contribute to the open source project: [https://github.com/islamic-network/alquran.cloud](https://github.com/islamic-network/alquran.cloud)
 - **FFmpeg-wasm:** To process and convert recorded video into hyperlapse MP4 format.
 - **Tailwind CSS:** For rapid, responsive styling.
