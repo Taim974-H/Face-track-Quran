@@ -4,7 +4,9 @@ const DirectionButton = ({ direction, isActive, onClick, className = '' }) => (
   <button
     onClick={() => onClick(direction)}
     className={`px-4 py-2 rounded-lg ${
-      isActive ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
+      isActive 
+      ? 'bg-blue-600 text-white' 
+      : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
     } ${className}`}
   >
     {direction.charAt(0).toUpperCase() + direction.slice(1)}
