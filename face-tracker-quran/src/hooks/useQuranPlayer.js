@@ -155,6 +155,59 @@ export const useQuranPlayer = (reciter) => {
     }
   }, [verse]);
 
+
+  const skipVerse = () => {
+    // If an audio element exists, pause and reset it.
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    // Clear the current audio, verse, and translation.
+    setAudio(null);
+    setVerse(null);
+    setTranslation(null);
+    // Optionally, disable continuous mode.
+    setIsContinuing(false);
+  };
+
+  // Restart the current surah from verse one.
+const restartSurah = async () => {
+  // Ensure we have a reference to the current surah from last played verse.
+  if (!lastPlayedVerse) {
+    console.error("No surah available to restart.");
+    return;
+  }
+  try {
+    const surah = lastPlayedVerse.surahNumber;
+    // Fetch the surah data using the current reciter.
+    const response = await axios.get(
+      `https://api.alquran.cloud/v1/surah/${surah}/editions/quran-simple,${reciterRef.current},en.sahih`
+    );
+    const verses = response.data.data[0].ayahs;
+    if (verses.length === 0) {
+      alert("No verses found for surah " + surah);
+      return;
+    }
+    // Get the first verse (assuming verses are in order)
+    const firstVerse = verses[0];
+    const newVerse = {
+      text: firstVerse.text,
+      audio: response.data.data[1].ayahs[0].audio,
+      surahNumber: surah,
+      verseNumber: firstVerse.numberInSurah, // should be 1 for the first verse
+    };
+    const translationText = response.data.data[2].ayahs[0].text;
+    // Update the state with the new verse.
+    setVerse(newVerse);
+    setLastPlayedVerse(newVerse);
+    setTranslation(translationText);
+    // Enable continuous mode so that subsequent verses are played automatically.
+    setIsContinuing(true);
+  } catch (error) {
+    console.error("Error restarting surah:", error);
+  }
+};
+
   return {
     verse,
     translation,
@@ -168,6 +221,8 @@ export const useQuranPlayer = (reciter) => {
     startContinuingSurah,
     stopContinuingSurah,
     togglePause,
+    skipVerse,
+    restartSurah,
     audioRef,
   };
 };

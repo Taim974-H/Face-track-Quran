@@ -132,17 +132,20 @@ export default function QuranPlayer() {
                 translation={quranPlayer.translation}
               />
             )}
-            {quranPlayer.lastPlayedVerse && (
+            {hasChosenDirection && quranPlayer.lastPlayedVerse && (
               <PlayerControls
-                audio={quranPlayer.audio}
+                versePlaying={!!quranPlayer.audio} // true if a verse is currently playing
                 isPaused={quranPlayer.isPaused}
                 isContinuing={quranPlayer.isContinuing}
                 onTogglePause={quranPlayer.togglePause}
                 onStopContinuing={quranPlayer.stopContinuingSurah}
                 onReplayLastVerse={quranPlayer.replayLastVerse}
                 onStartContinuing={quranPlayer.startContinuingSurah}
+                onSkip={quranPlayer.skipVerse}
+                onRestartSurah={quranPlayer.restartSurah}
               />
             )}
+
             {/* Menu button to return to the settings, only when no verse is playing */}
             {!quranPlayer.audio && (
               <button
